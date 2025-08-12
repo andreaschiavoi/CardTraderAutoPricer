@@ -22,14 +22,17 @@ public class ItemOperations {
     public void updatePriceToCheapest(CatalogItem catalogItem) {
         Long blueprintId = catalogItem.getBlueprintId();
         boolean isFoil = catalogItem.getProperties().isMtgFoil();
+        String language = catalogItem.getProperties().getMtgLanguage();
         Optional<ProductResponseWrapper.Product> cheapestProduct =
-                fetcher.fetchCheapestMarketplaceProductByBlueprintId(blueprintId, isFoil);
+                fetcher.fetchCheapestMarketplaceProductByBlueprintId(blueprintId, isFoil, language);
         cheapestProduct.ifPresent(cheapest -> {
             int cheapestPriceCents = cheapest.getPrice_cents();
-            if (cheapestPriceCents != catalogItem.getPriceCents()) {
+            int cheapestPriceCentWithoutTax = fixCheapestRemovingSellingTax(cheapestPriceCents);
+            if (cheapestPriceCentWithoutTax != catalogItem.getPriceCents()) {
                 Long myItemId = catalogItem.getId();
                 Integer myQuantity = catalogItem.getQuantity();
-                fetcher.updateProductPriceAndQuantity(myItemId, floatTransformer(cheapestPriceCents), myQuantity);
+                fetcher.updateProductPriceAndQuantity(myItemId, floatTransformer(cheapestPriceCentWithoutTax),
+                        myQuantity);
             }
         });
     }

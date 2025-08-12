@@ -35,6 +35,7 @@ public class CatalogItemFetcher {
                     .header("Authorization", "Bearer " + headerBearer)
                     .retrieve()
                     .bodyToFlux(CatalogItem.class)
+                    .filter(item -> item.getCategoryId() == 1)
                     .collectList()
                     .block();
         } catch (WebClientResponseException e) {
@@ -45,7 +46,9 @@ public class CatalogItemFetcher {
         return Collections.emptyList();
     }
 
-    public Optional<ProductResponseWrapper.Product> fetchCheapestMarketplaceProductByBlueprintId(long blueprintId, boolean isFoil) {
+    public Optional<ProductResponseWrapper.Product> fetchCheapestMarketplaceProductByBlueprintId(long blueprintId,
+                                                                                                 boolean isFoil,
+                                                                                                 String language) {
         try {
             System.out.println("blueprint id for this item is: " + blueprintId);
             ProductResponseWrapper response = webClient.get()
@@ -65,7 +68,10 @@ public class CatalogItemFetcher {
                     .bodyToMono(ProductResponseWrapper.class)
                     .block();
 
-            List<ProductResponseWrapper.Product> filteredSorted = processor.filterAndSortByHubAndPrice(response);
+            Thread.sleep(1000);
+
+            List<ProductResponseWrapper.Product> filteredSorted = processor.filterAndSortByHubAndPrice(response,
+                    language);
 
             Optional<ProductResponseWrapper.Product> first = filteredSorted.stream().findFirst();
             System.out.println("cheapest product is: " + first.get().getPrice().getCents());
